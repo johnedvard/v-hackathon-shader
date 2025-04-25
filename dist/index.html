@@ -3,18 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <title>Example of wasm shader runner usage</title>
-    
-<script type="module" nonce="CnLzGNLIAqgb3E0jwejjGw==">
-import init, * as bindings from '/wasm_shader_runner-71add78b5d529f5e.js';
-const wasm = await init({ module_or_path: '/wasm_shader_runner-71add78b5d529f5e_bg.wasm' });
 
+    <script type="module">
+      import init, * as bindings from "/wasm_shader_runner-5753fb67f4f97552.js";
+      const wasm = await init({
+        module_or_path: "/wasm_shader_runner-5753fb67f4f97552_bg.wasm",
+      });
 
-window.wasmBindings = bindings;
+      window.wasmBindings = bindings;
 
-
-dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
-
-</script>
+      dispatchEvent(
+        new CustomEvent("TrunkApplicationStarted", { detail: { wasm } })
+      );
+    </script>
     <style>
       html {
         width: 100%;
@@ -34,166 +35,19 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
         height: 100vh;
       }
     </style>
-  <link rel="modulepreload" href="/wasm_shader_runner-71add78b5d529f5e.js" crossorigin=anonymous integrity="sha384-wClQUccniTmmiqT5XdP8rW9IxCYzAbji9M6M2zexuvxjJpH6RVvayTzcdoXbfMbA"><link rel="preload" href="/wasm_shader_runner-71add78b5d529f5e_bg.wasm" crossorigin=anonymous integrity="sha384-GuiluS9/OISXNivAjclTpsXby286n8+SkqCwqdFqb5lS2Zx7qn/DGsikA36Pnfcl" as="fetch" type="application/wasm"></head>
-  <body>
-    <div>
-      <div>
-        <br />
-        <textarea
-          id="input-shader-text"
-          rows="20"
-          cols="200"
-          placeholder="Enter your shader code here..."
-        ></textarea>
-        <br />
-        <button id="send-shader-button">Apply shader code</button>
-        <button id="pause-button">Stop animation</button>
-        <label for="speed">Playback speed:</label>
-        <input type="range" id="speed" name="speed" min="-2" max="2" step="0.1" value="1">
-        <output id="speed-text">1</output>
-        <button id="lose-context">Test "Lose WebGL context"</button>
-      </div>
-      <div>
-        <br />
-        <textarea
-          id="input-player-state"
-          rows="20"
-          cols="200"
-          placeholder="Enter your shader code here..."
-        >
-{
-    "uniforms": {
-        "resolution": {
-            "width": 1920,
-            "height": 1080,
-            "pixel_aspect_ratio": 1
-        },
-        "time": 3600,
-        "time_delta": 0.02,
-        "frame": 100,
-        "frame_rate": 50,
-        "mouse": {
-            "x": 0,
-            "y": 0,
-            "down_x": 0,
-            "down_y": 0
-        },
-        "date": {
-            "year": 2024,
-            "month": 10,
-            "day": 30,
-            "time": 3600
-        }
-    },
-    "playback": {
-        "paused": true,
-        "speed": 1.0
-    }
-}
-        </textarea>
-        <br />
-        <button id="send-player-state">Send custom player state</button>
-      <div>
-
-      <script type="module">
-        // This code contains API calls, uses html controls to show how to use this API, and contains test code to ensure that wasm is not prone to failure.
-        import {
-          set_fragment_shader,
-          update_player_state,
-          play,
-          stop,
-        } from "/wasm_shader_runner-71add78b5d529f5e.js";
-
-        // Make functions accessible from browser console
-        globalThis.set_fragment_shader = set_fragment_shader;
-        globalThis.update_player_state = update_player_state;
-        globalThis.play = play;
-        globalThis.stop = stop;
-
-        // Get elements for futher manipulations
-        const inputShaderText = document.getElementById("input-shader-text");
-        const sendShaderButton = document.getElementById("send-shader-button");
-        const pauseButton = document.getElementById("pause-button");
-        const inputPlayerState = document.getElementById("input-player-state");
-        const sendPlayerState = document.getElementById("send-player-state");
-        const speedInput = document.getElementById("speed");
-        const speedText = document.getElementById("speed-text");
-
-        // Init textarea with `shaders/shader.frag` content, as default shader code by build script
-        inputShaderText.value = "void render_image( out vec4 fragColor, in vec2 fragCoord )\n\
-{\n\
-  fragColor = vec4\n\
-  (\n\
-    sin( fragCoord.x / u_resolution.x + u_time ) / 2.0 + 0.5, \n\
-    sin( fragCoord.y / u_resolution.y + u_time ) / 2.0 + 0.5, \n\
-    cos( fragCoord.x / u_resolution.x + fragCoord.y / u_resolution.y + u_time ) / 2.0 + 0.5, \n\
-    1.0\n\
-  );\n\
-}";
-
-        // Apply new shader, could be done multiple times during one session
-        sendShaderButton.addEventListener("click", () => {
-          set_fragment_shader(inputShaderText.value);
-          console.log("Shader text applied");
-        });
-
-        // For the purpose of testing, sends json composed by the tester
-        sendPlayerState.addEventListener("click", () => {
-          update_player_state(JSON.parse(inputPlayerState.value));
-        })
-
-        let paused = false;
-        pauseButton.addEventListener("click", () => {
-          if (paused) {
-            // Restores the animation by restoring the rendering, the animation can still be frozen if the animation speed is zero
-            play();
-            pauseButton.innerText = "Stop animation";
-          } else {
-            // Stops animation by stopping render
-            stop();
-            pauseButton.innerText = "Resume animation";
-          }
-          paused = !paused;
-          // play()/stop() can be replaced by update_player_state({playback:{paused}});
-        });
-
-        // range input is used for controlling animation speed in range of -2..2, but API allows to set any float value for speed
-        // negative value for reverse animation, zero speed will freeze the animation without turning off rendering
-        speedInput.addEventListener("input", () => {
-          speedText.value = speedInput.value;
-          update_player_state({playback:{speed: parseFloat(speedInput.value)}});
-        })
-
-        addEventListener("TrunkApplicationStarted", (event) => {
-          // Code sample for error reporting from wasm (for example about shader compilation errors)
-          addEventListener("WasmErrorEvent", (event) => {
-            // the `alert` was used for maximum visibility, the main thing is that the API returns a string with an error in the event without binding to the notification method
-            alert("Wasm reported error: " + event.detail);
-          });
-
-          // this code is for testing purposes only, to simulate loss of context to ensure no crashes
-          // should be skipped in production
-          const loseContextButton = document.getElementById("lose-context");
-          loseContextButton.addEventListener("click", () => {
-            const canvas = document.querySelector("canvas");
-            // Get the WebGL context from a canvas element
-            const gl = canvas.getContext("webgl2");
-
-            // Check if the WEBGL_lose_context extension is available
-            const loseContext = gl.getExtension("WEBGL_lose_context");
-
-            if (loseContext) {
-              // Simulate context loss
-              loseContext.loseContext();
-              setTimeout(() => {
-                loseContext.restoreContext();
-              }, 3000); // Restore context after 3 seconds
-            } else {
-              console.error("WEBGL_lose_context extension not available");
-            }
-          });
-        });
-      </script>
-    </div>
-  </body>
+    <link
+      rel="modulepreload"
+      href="/wasm_shader_runner-5753fb67f4f97552.js"
+      crossorigin="anonymous"
+      integrity="sha384-K04hsPSTBhvxLdvHcB1VN4PvH0Lqjkt+mSTUyiN+mNM2j4pc9SDtDerxtpVOqgM6"
+    />
+    <link
+      rel="preload"
+      href="/wasm_shader_runner-5753fb67f4f97552_bg.wasm"
+      crossorigin="anonymous"
+      integrity="sha384-K04hsPSTBhvxLdvHcB1VN4PvH0Lqjkt+mSTUyiN+mNM2j4pc9SDtDerxtpVOqgM6"
+      as="fetch"
+      type="application/wasm"
+    />
+  </head>
 </html>

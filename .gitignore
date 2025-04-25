@@ -17,7 +17,7 @@
 _key
 _data
 target
-dist
+
 .module
 Cargo.lock
 .DS_Store

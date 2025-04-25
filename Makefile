@@ -11,7 +11,7 @@ WASM_STRIP = wasm-strip
 DIST_DIR = dist
 SHADERS_DIR = shaders
 SHADER_FILE = $(SHADERS_DIR)/shader.frag
-INDEX_HTML = $(DIST_DIR)/index.html
+INDEX_HTML = $(DIST_DIR)/minimal_index.html
 
 # Comma
 comma := ,
